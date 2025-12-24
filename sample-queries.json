@@ -1,0 +1,53 @@
+[
+  {
+    "id": 1,
+    "label": "List monitors in stock",
+    "message": "Show me all monitors you have in stock."
+  },
+  {
+    "id": 2,
+    "label": "Search by product name",
+    "message": "Find a product called Touch Screen Monitor - Model C."
+  },
+  {
+    "id": 3,
+    "label": "Get product by SKU",
+    "message": "What can you tell me about product MON-0088?"
+  },
+  {
+    "id": 4,
+    "label": "List active networking products",
+    "message": "List all active networking products."
+  },
+  {
+    "id": 5,
+    "label": "Order status (no ID)",
+    "message": "What is the status of my last order?"
+  },
+  {
+    "id": 6,
+    "label": "Order history",
+    "message": "Show my recent orders from the last month."
+  },
+  {
+    "id": 7,
+    "label": "Specific order by ID",
+    "message": "Get the details of order 2d9bb4c0-4f2b-4c59-90a6-1234567890ab."
+  },
+  {
+    "id": 8,
+    "label": "Unsupported action (create order)",
+    "message": "I want to place a new order for 3 units of MON-0088."
+  },
+  {
+    "id": 9,
+    "label": "Out of scope question",
+    "message": "Who is the current CEO of your company?"
+  },
+  {
+    "id": 10,
+    "label": "Auth-like query with known test customer",
+    "message": "My email is laurahenderson@example.org and my PIN is 1488. Can you help me with my orders?"
+  }
+]
+

@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"my-mcp-server-706e0a1c": {
+			"url": "https://vipfapwm3x.us-east-1.awsapprunner.com/mcp",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}
