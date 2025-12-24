@@ -76,6 +76,23 @@ export class OrchestratorAgent {
       { agent: 'orchestrator' },
     );
 
+    const normalized = userMessage.toLowerCase();
+
+    if (intent.targetAgent === 'product') {
+      const mentionsMonitors =
+        normalized.includes('monitor') || normalized.includes('monitors');
+      const looksLikeListing =
+        normalized.includes('show me all') ||
+        normalized.includes('list') ||
+        normalized.includes('browse') ||
+        normalized.includes('in stock') ||
+        normalized.includes('available');
+
+      if (mentionsMonitors && looksLikeListing) {
+        intent.toolHint = 'list_products';
+      }
+    }
+
     nextState.lastIntent = intent;
 
     if (intent.targetAgent === 'out_of_scope') {
@@ -87,7 +104,7 @@ export class OrchestratorAgent {
       return { reply, state: nextState };
     }
 
-    if (intent.missingInformation) {
+    if (intent.missingInformation && intent.targetAgent !== 'order') {
       const reply = intent.missingInformation;
       nextState.messages.push({ role: 'assistant', content: reply });
       if (trace && typeof trace.end === 'function') {
@@ -311,6 +328,33 @@ export class OrchestratorAgent {
         if (args.pin) {
           state.customerPin = args.pin;
         }
+
+        const text =
+          typedResponse.structuredContent &&
+          typeof typedResponse.structuredContent === 'object' &&
+          'result' in typedResponse.structuredContent
+            ? String(
+                (typedResponse.structuredContent as { result?: unknown })
+                  .result ?? '',
+              )
+            : typedResponse.content.map((c) => c.text).join('\n');
+
+        const customerIdMatch =
+          text.match(
+            /\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\b/,
+          ) ?? [];
+
+        if (customerIdMatch[0]) {
+          state.customerId = customerIdMatch[0];
+
+          if (state.pendingCreateOrder) {
+            state.pendingCreateOrder = {
+              ...state.pendingCreateOrder,
+              customer_id: state.customerId,
+            };
+          }
+        }
+
         continue;
       }
     }

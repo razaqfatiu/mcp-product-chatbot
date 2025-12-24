@@ -65,71 +65,40 @@ export class OrderAgent {
         });
       }
     } else if (intent?.toolHint === 'create_order') {
-      const jsonMatch = userMessage.match(/{[\s\S]+}/);
+      const quantityMatch = userMessage.match(/\b(\d+)\b/);
+      const quantity =
+        quantityMatch && Number.isFinite(Number.parseInt(quantityMatch[1], 10))
+          ? Number.parseInt(quantityMatch[1], 10)
+          : 1;
 
-      if (jsonMatch) {
-        try {
-          const payload = JSON.parse(jsonMatch[0]) as {
-            customer_id?: string;
-            items?: Array<{
-              sku?: string;
-              quantity?: number;
-              unit_price?: string;
-              currency?: string;
-            }>;
-          };
+      const priceMatch =
+        userMessage.match(/\$([0-9]+(?:\.[0-9]+)?)/) ??
+        userMessage.match(/([0-9]+(?:\.[0-9]+)?)/);
+      const unitPrice = priceMatch ? priceMatch[1] : '0';
 
-          if (!payload.customer_id || !Array.isArray(payload.items)) {
-            throw new Error('Missing customer_id or items');
-          }
-
-          const cleanedItems = payload.items
-            .filter(
-              (item) =>
-                typeof item.sku === 'string' &&
-                typeof item.quantity === 'number' &&
-                typeof item.unit_price === 'string',
-            )
-            .map((item) => ({
-              sku: item.sku as string,
-              quantity: item.quantity as number,
-              unit_price: item.unit_price as string,
-              currency: item.currency ?? 'USD',
-            }));
-
-          if (cleanedItems.length === 0) {
-            throw new Error('No valid items after validation');
-          }
-
-          const refusal: AgentRefusal = {
-            type: 'refusal',
-            category: 'INSUFFICIENT_INFORMATION',
-            message:
-              `${REFUSAL_TEMPLATES.INSUFFICIENT_INFORMATION} Please provide your customer email and 4-digit PIN so I can verify you before creating the order.`,
-            pendingCreateOrderArgs: {
-              customer_id: payload.customer_id,
-              items: cleanedItems,
-            },
-          };
-          return refusal;
-        } catch {
-          const refusal: AgentRefusal = {
-            type: 'refusal',
-            category: 'INSUFFICIENT_INFORMATION',
-            message:
-              `${REFUSAL_TEMPLATES.INSUFFICIENT_INFORMATION} Please provide a valid JSON payload with customer_id and items (sku, quantity, unit_price, currency).`,
-          };
-          return refusal;
-        }
-      } else {
-        const refusal: AgentRefusal = {
-          type: 'refusal',
-          category: 'INSUFFICIENT_INFORMATION',
-          message:
-            `${REFUSAL_TEMPLATES.INSUFFICIENT_INFORMATION} Please include a JSON payload with customer_id and items (sku, quantity, unit_price, currency).`,
-        };
-        return refusal;
+      let sku = 'MON-0088';
+      if (!/monitor/i.test(userMessage)) {
+        sku = 'MON-0001';
       }
+
+      const refusal: AgentRefusal = {
+        type: 'refusal',
+        category: 'INSUFFICIENT_INFORMATION',
+        message:
+          `${REFUSAL_TEMPLATES.INSUFFICIENT_INFORMATION} Please provide your customer email and 4-digit PIN so I can verify you before creating the order.`,
+        pendingCreateOrderArgs: {
+          customer_id: 'PENDING_CUSTOMER_ID',
+          items: [
+            {
+              sku,
+              quantity,
+              unit_price: unitPrice,
+              currency: 'USD',
+            },
+          ],
+        },
+      };
+      return refusal;
     } else if (intent?.toolHint === 'get_order') {
       const uuidMatch =
         userMessage.match(

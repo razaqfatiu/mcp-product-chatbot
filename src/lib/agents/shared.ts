@@ -47,9 +47,10 @@ export interface ConversationState {
   lastIntent?: IntentClassification;
   customerEmail?: string;
   customerPin?: string;
+  customerId?: string;
   pendingCreateOrder?: CreateOrderArgs;
-   pendingOrderRequestMessage?: string;
-   pendingOrderToolHint?: McpToolName | null;
+  pendingOrderRequestMessage?: string;
+  pendingOrderToolHint?: McpToolName | null;
 }
 
 export const PRODUCT_TOOLS: McpToolName[] = [
