@@ -51,6 +51,19 @@ export class OrderAgent {
             'Create a new order using the previously provided customer_id and items after successful verification.',
         });
       }
+
+      if (
+        state.pendingOrderRequestMessage &&
+        (!state.pendingOrderToolHint ||
+          state.pendingOrderToolHint === 'list_orders')
+      ) {
+        toolCalls.push({
+          tool: 'list_orders',
+          args: {},
+          description:
+            'List orders for the customer after successful verification.',
+        });
+      }
     } else if (intent?.toolHint === 'create_order') {
       const jsonMatch = userMessage.match(/{[\s\S]+}/);
 
@@ -139,6 +152,18 @@ export class OrderAgent {
         description: 'Get a specific order by its ID.',
       });
     } else if (intent?.toolHint === 'list_orders') {
+      if (!state.customerEmail || !state.customerPin) {
+        const refusal: AgentRefusal = {
+          type: 'refusal',
+          category: 'INSUFFICIENT_INFORMATION',
+          message:
+            `${REFUSAL_TEMPLATES.INSUFFICIENT_INFORMATION} Please provide your customer email and 4-digit PIN so I can verify you before checking your orders.`,
+          pendingOrderRequestMessage: userMessage,
+          pendingOrderToolHint: 'list_orders',
+        };
+        return refusal;
+      }
+
       toolCalls.push({
         tool: 'list_orders',
         args: {},
@@ -157,6 +182,18 @@ export class OrderAgent {
           description: 'Get a specific order by its ID.',
         });
       } else {
+        if (!state.customerEmail || !state.customerPin) {
+          const refusal: AgentRefusal = {
+            type: 'refusal',
+            category: 'INSUFFICIENT_INFORMATION',
+            message:
+              `${REFUSAL_TEMPLATES.INSUFFICIENT_INFORMATION} Please provide your customer email and 4-digit PIN so I can verify you before checking your orders.`,
+            pendingOrderRequestMessage: userMessage,
+            pendingOrderToolHint: 'list_orders',
+          };
+          return refusal;
+        }
+
         toolCalls.push({
           tool: 'list_orders',
           args: {},

@@ -112,6 +112,12 @@ export class OrchestratorAgent {
       if (planResult.pendingCreateOrderArgs) {
         nextState.pendingCreateOrder = planResult.pendingCreateOrderArgs;
       }
+      if (planResult.pendingOrderRequestMessage) {
+        nextState.pendingOrderRequestMessage =
+          planResult.pendingOrderRequestMessage;
+        nextState.pendingOrderToolHint =
+          planResult.pendingOrderToolHint ?? intent.toolHint ?? null;
+      }
 
       const refusalMessage =
         planResult.message ?? this.templateForCategory(planResult.category);
@@ -142,10 +148,6 @@ export class OrchestratorAgent {
       { agent: 'orchestrator' },
     );
 
-    if (planResult.toolCalls.some((call) => call.tool === 'create_order')) {
-      nextState.pendingCreateOrder = undefined;
-    }
-
     const anyToolError = toolResponses.some(
       (response) => response.isError === true,
     );
@@ -159,11 +161,27 @@ export class OrchestratorAgent {
       return { reply, state: nextState };
     }
 
+    const usedPendingOrderRequest =
+      Boolean(nextState.pendingOrderRequestMessage) &&
+      planResult.toolCalls.some((call) => call.tool === 'verify_customer_pin');
+
+    const userMessageForAnswer = usedPendingOrderRequest
+      ? nextState.pendingOrderRequestMessage ?? userMessage
+      : userMessage;
+
+    if (planResult.toolCalls.some((call) => call.tool === 'create_order')) {
+      nextState.pendingCreateOrder = undefined;
+    }
+    if (usedPendingOrderRequest) {
+      nextState.pendingOrderRequestMessage = undefined;
+      nextState.pendingOrderToolHint = undefined;
+    }
+
     const reply = await withSpan(
       trace,
       'final_answer',
       async () =>
-        this.generateFinalAnswer(userMessage, planResult, toolResponses),
+        this.generateFinalAnswer(userMessageForAnswer, planResult, toolResponses),
       { agent: 'orchestrator' },
     );
 

@@ -48,6 +48,8 @@ export interface ConversationState {
   customerEmail?: string;
   customerPin?: string;
   pendingCreateOrder?: CreateOrderArgs;
+   pendingOrderRequestMessage?: string;
+   pendingOrderToolHint?: McpToolName | null;
 }
 
 export const PRODUCT_TOOLS: McpToolName[] = [
@@ -81,6 +83,8 @@ export interface AgentRefusal {
   category: RefusalCategory;
   message?: string;
   pendingCreateOrderArgs?: CreateOrderArgs;
+  pendingOrderRequestMessage?: string;
+  pendingOrderToolHint?: McpToolName | null;
 }
 
 export type AgentPlanResult = AgentToolPlan | AgentRefusal;
